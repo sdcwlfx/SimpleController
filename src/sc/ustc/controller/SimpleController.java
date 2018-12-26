@@ -8,7 +8,11 @@ import java.io.InputStreamReader;
 import java.io.InputStream;
 import java.io.BufferedReader;
 import sc.ustc.dom.XMLParse;
+import sc.ustc.dynamicProxy.CustomInterceptor;
+import sc.ustc.dynamicProxy.ProxyHandler;
+import sc.ustc.dynamicProxy.RealCustomInterceptor;
 import sc.ustc.util.InvokeReflection;
+import sc.ustc.xslt.XSLT;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletContext;
@@ -19,6 +23,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.dom4j.io.SAXReader;
+
+import com.sun.org.apache.bcel.internal.generic.NEW;
+
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
@@ -101,21 +108,45 @@ public class SimpleController extends HttpServlet {
 					String goalActionMethod=goalElement.attributeValue("method");//获取目标元素属性为method的值
 					String goalAction=goalElement.attributeValue("class");//获取目标元素属性为class的值
 					System.out.println("goalAction: "+goalAction+"    goalActionMethod: "+goalActionMethod);
-					String result=InvokeReflection.invokeActionReflection(goalAction, goalActionMethod);//java反射调用jar包外（即UserSC工程）中Action（goalAction）类中指定方法（goalActionMethod），并获得方法返回结果
+					
+					//e3隐藏 String result=InvokeReflection.invokeActionReflection(goalAction, goalActionMethod);//java反射调用jar包外（即UserSC工程）中Action（goalAction）类中指定方法（goalActionMethod），并获得方法返回结果
+					
+					//使用动态代理调用action
+					ProxyHandler proxyHandler=new ProxyHandler();
+					//绑定该类实现的所有接口
+					CustomInterceptor customInterceptor=(CustomInterceptor)proxyHandler.bind(new RealCustomInterceptor());
+					String result=customInterceptor.action(controllerUrl, actionName);
+					System.out.println("返回的result:  "+result);
+					
 					
 					//返回actionName下子元素result对应的响应页面
 					Element resultElement=XMLParse.getResultElement(goalElement, result,actionName);//获取到result元素   ??????goalElement是action元素的内容，但传到函数中打印确是整个xml内容
-					//if()
-					String resultType=resultElement.attributeValue("type");//type类型
-					String resultValue=resultElement.attributeValue("value");//响应页面
-					System.out.println("resultType: "+resultType+"    "+"resultValue: "+resultValue);
-					if(resultType.endsWith("forward")) {
-						RequestDispatcher requestDispatcher=request.getRequestDispatcher(resultValue);//获取请求转发器对象，该转发器的指向通过getRequestDisPatcher()的参数设置
-						requestDispatcher.forward(request, response);//转发请求
+					if(resultElement==null) {//对从xml中返回的result元素判null
+						out.println("<html><head><title>SimpleController</title></head><body>404!!Controller.xml is wrong!! Page goes to Mars!!!</body></html>");
 					}else {
-						response.sendRedirect(resultValue);//重定向转发请求
+						String resultType=resultElement.attributeValue("type");//type类型
+						String resultValue=resultElement.attributeValue("value");//响应页面
+						
+						
+						//e4  若响应页面为xml结尾，则生成html页面，再使用html页面作为响应,关键在于路径UseSC项目中xml文件和xsl文件路径
+						if(resultValue.endsWith("_view.xml")) {
+							URL xmlUrl = getClass().getClassLoader().getResource("../../"+resultValue);//getResource（）会在jar包所在路径内查找，所以需要../../转化到WebContent路径
+							String xmlPath=xmlUrl.getPath();
+							System.out.println("xmlPath:  "+xmlPath);///F:/ustcsse/J2EE/.metadata/.plugins/org.eclipse.wst.server.core/tmp0/wtpwebapps/UseSC/pages/success_view.xml
+							resultValue=XSLT.xslToHtml(xmlPath);//返回的值为：pages/success_view.html
+						}
+						
+						
+						
+						
+						System.out.println("resultType: "+resultType+"    "+"resultValue: "+resultValue);
+						if(resultType.endsWith("forward")) {
+							RequestDispatcher requestDispatcher=request.getRequestDispatcher(resultValue);//获取请求转发器对象，该转发器的指向通过getRequestDisPatcher()的参数设置
+							requestDispatcher.forward(request, response);//转发请求
+						}else {
+							response.sendRedirect(resultValue);//重定向转发请求
+						}
 					}
-					
 					
 					//out.println("<html><head><title>SimpleController</title></head><body>find it!!</body></html>");
 				}
