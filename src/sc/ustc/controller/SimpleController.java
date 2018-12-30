@@ -63,6 +63,9 @@ public class SimpleController extends HttpServlet {
 		response.setContentType("text/html;charset=utf-8");
 		PrintWriter out=response.getWriter();
 		String actionURI=request.getRequestURI();//    内容：/UseSC/Login.sc
+		String userName=request.getParameter("userName");//获取表单用户名
+		String userPassword=request.getParameter("userPassword");//获取表单密码
+		System.out.println("userName: "+userName+"    userPassword:  "+userPassword);
 		System.out.println(actionURI);
 		System.out.println(actionURI.length());
 		
@@ -115,7 +118,8 @@ public class SimpleController extends HttpServlet {
 					ProxyHandler proxyHandler=new ProxyHandler();
 					//绑定该类实现的所有接口
 					CustomInterceptor customInterceptor=(CustomInterceptor)proxyHandler.bind(new RealCustomInterceptor());
-					String result=customInterceptor.action(controllerUrl, actionName);
+					//String result=customInterceptor.action(controllerUrl, actionName);
+					String result=customInterceptor.action(controllerUrl, actionName,userName,userPassword);
 					System.out.println("返回的result:  "+result);
 					
 					

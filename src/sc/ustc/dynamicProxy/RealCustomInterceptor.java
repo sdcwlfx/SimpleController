@@ -17,17 +17,9 @@ import sc.ustc.util.InvokeReflection;
  *
  */
 public class RealCustomInterceptor implements CustomInterceptor {
-
-	//@Override
-//	public void predo() {
-//		// TODO Auto-generated method stub
-//		
-//
-//	}
-
 	@Override
-	public String action(URL url,String actionName) {
-		// TODO Auto-generated method stub
+	public String action(URL url,String actionName,String userName,String userPassword) {
+		
 		Element actionElement=null;
 		Element interceptorElement=null;
 		String actionResult="";
@@ -46,16 +38,16 @@ public class RealCustomInterceptor implements CustomInterceptor {
 				
 				//反射机制执行predo()、action()、afterdo()
 				InvokeReflection.invokeInterceptorReflection(interceptorClass, predo, actionName);
-				actionResult=InvokeReflection.invokeActionReflection(actionClass, actionMethod);
+				//actionResult=InvokeReflection.invokeActionReflection(actionClass, actionMethod);
+				actionResult=InvokeReflection.invokeActionReflection(actionClass, actionMethod,userName,userPassword);
 				InvokeReflection.invokeInterceptorReflection(interceptorClass,afterdo, actionResult);
 					
 			}else if(actionElement!=null) {//未配置拦截器，直接执行action
 				//action类及方法
 				String actionClass=actionElement.attributeValue("class");
 				String actionMethod=actionElement.attributeValue("method");
-				actionResult=InvokeReflection.invokeActionReflection(actionClass, actionMethod);
-				
-				
+				//actionResult=InvokeReflection.invokeActionReflection(actionClass, actionMethod);
+				actionResult=InvokeReflection.invokeActionReflection(actionClass, actionMethod,userName,userPassword);
 			}
 		} catch (DocumentException e) {
 			// TODO Auto-generated catch block

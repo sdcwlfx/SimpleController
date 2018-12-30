@@ -15,17 +15,19 @@ public class InvokeReflection {
 	 * @param goalActionMethod：handleRegister
 	 * @return
 	 */
-	public static String invokeActionReflection(String goalAction,String goalActionMethod) {
+	public static String invokeActionReflection(String goalAction,String goalActionMethod,String userName,String userPassword) {
 		String result="failure";
 		try {
 			//获得要调用的action类对象
 			Class<?> clazz=Class.forName(goalAction);
 			
 			//返回action类中方法goalActionMethod,第一个参数：方法名；第二个参数：方法参数类型
-			Method method=clazz.getMethod(goalActionMethod, null);
+			//Method method=clazz.getMethod(goalActionMethod, null);
+			Method method=clazz.getMethod(goalActionMethod, String.class,String.class);
+			result=String.valueOf(method.invoke(clazz.newInstance(),userName,userPassword));
 			
 			//执行该方法，第一个参数：类的一个实例；第二个参数：方法的参数
-			result=String.valueOf(method.invoke(clazz.newInstance(),null));
+			//result=String.valueOf(method.invoke(clazz.newInstance(),null));
 			System.out.println("Refelction result: "+result);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block

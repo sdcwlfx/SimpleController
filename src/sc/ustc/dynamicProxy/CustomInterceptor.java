@@ -15,7 +15,7 @@ public interface CustomInterceptor {
 	//public void predo();
 	
 	//调用java反射机制的action类中方法,返回结果
-	public String action(URL url,String actionName);
+	public String action(URL url,String actionName,String userName,String userPassword);
 	
 	//调用拦截器中afterdo()方法，通过java反射机制实现
 	//public void afterdo();
