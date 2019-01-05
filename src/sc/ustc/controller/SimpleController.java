@@ -74,6 +74,8 @@ public class SimpleController extends HttpServlet {
 		int actionEnd=actionURI.lastIndexOf(".");//获得最后'.'的位置
 		if(actionBegin<0||actionEnd<0) {
 			String pathGetClass =this.getClass().getProtectionDomain().getCodeSource().getLocation().getPath();
+			
+			
 			System.out.println("pathGetClass: "+pathGetClass);	
 			out.println("<html><head><title>SimpleController</title></head><body>404!!!未找到该网页！Controller!</body></html>");
 		}else {
