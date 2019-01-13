@@ -6,13 +6,15 @@ import org.dom4j.Element;
 import org.dom4j.Node;
 import org.dom4j.io.SAXReader;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 
 
 /**
- * dom4j方式解析controller.xml文件
+ * dom4j+jaxen组合xpath方式解析controller.xml文件
  * @author asus
  *
  */
@@ -74,6 +76,95 @@ public class XMLParse {
 		return interceptorElement;
 		
 	}
+	
+	
+	
+	/**
+	 * e7解析di.xml文件,查找与action同名的bean元素，找不到返回null
+	 * @param url di.xml文件路径
+	 * @param actionName  请求的action名字,对应bean元素节点中id属性
+	 * @return 找不到元素时返回null
+	 * @throws DocumentException
+	 */
+	public static Element getBeanElementFromDI(URL url,String actionName) throws DocumentException{
+		
+		SAXReader reader = new SAXReader();
+        Document document = reader.read(url);
+		//xpath方式查询bean元素
+		Element resultElement=(Element)document.selectSingleNode("/sc-di/bean[@id='"+actionName.toLowerCase()+"']");//获取id属性等于actionName的bean元素
+		//Element resultElement=(Element)document.selectSingleNode("/action/result[@name='"+result+"']");
+		if(resultElement!=null) {
+			System.out.println(resultElement.asXML());
+		}
+		return resultElement;
+		
+	}
+	
+	
+	/**
+	 * e7 获取指定bean下的域名和域对应的bean元素，这里只适用于一个被依赖bean的情况
+	 * @param url di.xml路径
+	 * @param actionName 对应bean元素中id属性
+	 * @return 返回域名及对应bean元素
+	 * @throws DocumentException
+	 */
+	public static Map<String, String> getFieldElement(URL url,String actionName)throws DocumentException{
+		Map<String, String> fieldMap=new HashMap<>();
+		SAXReader reader = new SAXReader();
+        Document document = reader.read(url);
+        Element fieldElement=null;
+		//xpath方式查询bean元素
+		Element resultElement=(Element)document.selectSingleNode("/sc-di/bean[@id='"+actionName.toLowerCase()+"']");//获取id属性等于actionName的bean元素
+		//Element resultElement=(Element)document.selectSingleNode("/action/result[@name='"+result+"']");
+		if(resultElement!=null) {
+			System.out.println(resultElement.asXML());
+			fieldElement=(Element)document.selectSingleNode("/sc-di/bean[@id='"+actionName.toLowerCase()+"']/field");//获取id属性等于actionName的bean元素下的field域元素
+			//若含有field域
+			if(fieldElement!=null) {
+				String fieldName=fieldElement.attributeValue("name");//域名
+				String fieldBeanRef=fieldElement.attributeValue("bean-ref");//域类型
+				Element beanRefElement=(Element)document.selectSingleNode("/sc-di/bean[@id='"+fieldBeanRef+"']");
+				//将域名和域的类型放入Map对象
+				fieldMap.put("name", fieldName);
+				fieldMap.put("class", beanRefElement.attributeValue("class"));
+				System.out.println("域名： "+fieldName+"    域类型：   "+beanRefElement.attributeValue("class"));
+			}
+		}
+		return fieldMap;
+	}
+	
+	/**
+	 * e7 得到依赖的bean的域类型id
+	 * @param url
+	 * @param actionName
+	 * @return
+	 * @throws DocumentException
+	 */
+	public static String getFieldRef(URL url,String actionName)throws DocumentException{
+		
+		SAXReader reader = new SAXReader();
+        Document document = reader.read(url);
+        String fieldBeanRef="";
+        Element fieldElement=null;
+        
+		//xpath方式查询bean元素
+		Element resultElement=(Element)document.selectSingleNode("/sc-di/bean[@id='"+actionName.toLowerCase()+"']");//获取id属性等于actionName的bean元素
+		//Element resultElement=(Element)document.selectSingleNode("/action/result[@name='"+result+"']");
+		if(resultElement!=null) {
+			System.out.println(resultElement.asXML());
+			fieldElement=(Element)document.selectSingleNode("/sc-di/bean[@id='"+actionName.toLowerCase()+"']/field");//获取id属性等于actionName的bean元素下的field域元素
+			//若含有field域
+			if(fieldElement!=null) {
+				
+				fieldBeanRef=fieldElement.attributeValue("bean-ref");//域类型
+				
+			}
+		}
+		return fieldBeanRef;
+	}
+	
+	
+	
 	
 	
 

@@ -4,6 +4,7 @@ import java.io.IOException;
 //import java.io.PrintWriter;
 import java.io.PrintWriter;
 import java.net.URL;
+import java.util.Map;
 import java.io.InputStreamReader;
 import java.io.InputStream;
 import java.io.BufferedReader;
@@ -102,7 +103,7 @@ public class SimpleController extends HttpServlet {
 				Node node=XMLParse.getNode(controllerUrl, actionName);
 				//未找到指定的action
 				if(node==null) {
-					out.println("<html><head><title>SimpleController</title></head><body>404!!! 不可识别的Action请求!!!</body></html>");
+					out.println("<html><head><title>SimpleController</title></head><body>404!!! 无法识别该请求!!!</body></html>");
 				}else {
 //					String goalClass=node.valueOf("class");//获取节点属性名为class的的值
 //					String goalMethod=node.valueOf("method");//获取节点属性为method的值
@@ -116,12 +117,44 @@ public class SimpleController extends HttpServlet {
 					
 					//e3隐藏 String result=InvokeReflection.invokeActionReflection(goalAction, goalActionMethod);//java反射调用jar包外（即UserSC工程）中Action（goalAction）类中指定方法（goalActionMethod），并获得方法返回结果
 					
+					//e7
+					//di.xml路径URL
+					String result=null;
+					URL diUrl = getClass().getClassLoader().getResource("../../pages/di.xml");
+					//获取di.xml中对应action的Bean元素
+					Element beanElement=XMLParse.getBeanElementFromDI(diUrl, actionName);
+					if(beanElement==null) {
+						//直接通过反射调用Action的指定方法
+						result=InvokeReflection.invokeActionReflection(goalAction, goalActionMethod,userName,userPassword);//java反射调用jar包外（即UserSC工程）中Action（goalAction）类中指定方法（goalActionMethod），并获得方法返回结果
+					}else {
+						//找到了，则查看是否有属性依赖其它bean节点，无依赖直接通过反射构造该bean实例，并将请求分发至其处理
+						Map<String, String> fieldChildMap=XMLParse.getFieldElement(diUrl, actionName);
+						//获取被依赖bean的id
+						String beanId=XMLParse.getFieldRef(diUrl, actionName);
+						if(fieldChildMap.size()==0) {
+							//无属性依赖其它bean节点，直接通过反射构造实例处理请求
+							result=InvokeReflection.invokeActionReflection(goalAction, goalActionMethod,userName,userPassword);//java反射调用jar包外（即UserSC工程）中Action（goalAction）类中指定方法（goalActionMethod），并获得方法返回结果
+						}else {
+							//目标action的bean节点有属性依赖其它bean节点，先通过反射构造被依赖的bean实例，再构造依赖bean实例，通过内省机制将被依赖bean实例注入依赖bean实例中
+							Map<String, String> fieldGrandsonMap=XMLParse.getFieldElement(diUrl, beanId);
+							result=InvokeReflection.invokeIntrospectorBean(goalAction, goalActionMethod, userName, userPassword, fieldChildMap,fieldGrandsonMap);
+						}
+						
+					}
+					
+					
+					
+					
+					
+					
+					//e7隐藏
 					//使用动态代理调用action
-					ProxyHandler proxyHandler=new ProxyHandler();
-					//绑定该类实现的所有接口
-					CustomInterceptor customInterceptor=(CustomInterceptor)proxyHandler.bind(new RealCustomInterceptor());
-					//String result=customInterceptor.action(controllerUrl, actionName);
-					String result=customInterceptor.action(controllerUrl, actionName,userName,userPassword);
+//					ProxyHandler proxyHandler=new ProxyHandler();
+//					//绑定该类实现的所有接口
+//					CustomInterceptor customInterceptor=(CustomInterceptor)proxyHandler.bind(new RealCustomInterceptor());
+//					//String result=customInterceptor.action(controllerUrl, actionName);
+//					String result=customInterceptor.action(controllerUrl, actionName,userName,userPassword);
+					//e7隐藏
 					System.out.println("返回的result:  "+result);
 					
 					

@@ -20,7 +20,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 public class Configuration {
-	
+	//注意路径
 	private static String or_mapping_path=Thread.currentThread().getContextClassLoader().getResource("../../pages/or_mapping.xml").getPath();
 	
 	//获取xml的doc描述
@@ -40,6 +40,7 @@ public class Configuration {
 	
 	//解析xml文件中的数据库配置信息
 	public static Map<String, String> getJDBCConfig(){
+		//键值对形式存储配置信息
 		Map<String, String> jdbcConfig=new HashMap<String, String>();
 		Document document=getDocument();
 		try {
@@ -65,9 +66,9 @@ public class Configuration {
 	public static OR_class getClassConfig(String className) {
 		OR_class or_class=new OR_class();
 		Document document=getDocument();
+		//获取所有class节点
 		NodeList classList=document.getElementsByTagName("class");
-		
-		//遍历class节点
+		//遍历所有class节点
 		for (int i = 0; i < classList.getLength(); i++) {
 			//获取class节点
 			Element classElement=(Element)classList.item(i);
@@ -83,18 +84,14 @@ public class Configuration {
 				List<List<String>> propertyLists=new ArrayList<List<String>>();
 				for (int j = 0; j <propertyList.getLength(); j++) {
 					List<String> property=new ArrayList<String>();
-					
 					String name=((Element)propertyList.item(j)).getElementsByTagName("name").item(0).getFirstChild().getNodeValue();
 					System.out.println("xml解析name属性值："+name);
 					property.add(name);
-					
 					String column=((Element)propertyList.item(j)).getElementsByTagName("column").item(0).getFirstChild().getNodeValue();
 					System.out.println("xml解析column属性值："+column);
 					property.add(column);
-					
 					String type=((Element)propertyList.item(j)).getElementsByTagName("type").item(0).getFirstChild().getNodeValue();
 					property.add(type);
-					
 					String lazy=((Element)propertyList.item(j)).getElementsByTagName("lazy").item(0).getFirstChild().getNodeValue();
 					property.add(lazy);
 					propertyLists.add(property);
